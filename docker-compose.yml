@@ -1,0 +1,27 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:80"
+    volumes:
+      # Persist cache between container restarts
+      - cache_data:/var/www/html/storage/framework/cache
+    environment:
+      - APP_NAME=Chris McGann Painter & Decorator
+      - APP_ENV=local
+      - APP_KEY=base64:xGbRvJYsxWGKo8n7qYc0H4z2jkLfNm1pOqRsTu3vWxY=
+      - APP_DEBUG=true
+      - APP_URL=http://localhost:8000
+      - LOG_CHANNEL=stderr
+      - CACHE_DRIVER=file
+      - SESSION_DRIVER=file
+      # Instagram API credentials - set these in .env or pass directly
+      - INSTAGRAM_APP_ID=${INSTAGRAM_APP_ID:-}
+      - INSTAGRAM_APP_SECRET=${INSTAGRAM_APP_SECRET:-}
+      - INSTAGRAM_ACCESS_TOKEN=${INSTAGRAM_ACCESS_TOKEN:-}
+    restart: unless-stopped
+
+volumes:
+  cache_data:
+
+
