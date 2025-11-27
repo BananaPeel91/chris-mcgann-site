@@ -311,8 +311,10 @@
         .scroll-indicator {
             position: absolute;
             bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 0;
+            right: 0;
+            margin-inline: auto;
+            width: fit-content;
             display: flex;
             flex-direction: column;
             align-items: center;
