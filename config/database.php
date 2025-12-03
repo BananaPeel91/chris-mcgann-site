@@ -1,8 +1,8 @@
 <?php
 
 /**
- * Database configuration - Not used in this application
- * The site uses file-based caching only, no database required
+ * Database configuration
+ * Using SQLite for simple settings storage (Instagram token)
  */
 
 return [
@@ -12,8 +12,9 @@ return [
     'connections' => [
         'sqlite' => [
             'driver' => 'sqlite',
-            'database' => ':memory:',
+            'database' => database_path('database.sqlite'),
             'prefix' => '',
+            'foreign_key_constraints' => true,
         ],
     ],
 

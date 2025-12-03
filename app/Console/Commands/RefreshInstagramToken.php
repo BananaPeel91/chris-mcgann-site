@@ -14,7 +14,8 @@ class RefreshInstagramToken extends Command
      */
     protected $signature = 'instagram:refresh-token 
                             {--exchange : Exchange a short-lived token for a long-lived token}
-                            {--token= : The short-lived token to exchange (used with --exchange)}';
+                            {--token= : The short-lived token to exchange (used with --exchange)}
+                            {--no-save : Do not automatically save to .env file}';
 
     /**
      * The console command description.
@@ -52,10 +53,15 @@ class RefreshInstagramToken extends Command
                 $this->info("  Token expires in: {$days} days");
             }
             
-            $this->newLine();
-            $this->warn('⚠ IMPORTANT: Update your .env file with the new token:');
-            $this->newLine();
-            $this->line("INSTAGRAM_ACCESS_TOKEN={$result['token']}");
+            // Auto-save unless --no-save is specified
+            if (!$this->option('no-save')) {
+                $this->saveToken($instagram, $result['token']);
+            } else {
+                $this->newLine();
+                $this->warn('⚠ Update your .env file with the new token:');
+                $this->line("INSTAGRAM_ACCESS_TOKEN={$result['token']}");
+            }
+            
             $this->newLine();
             
             // Clear the cache so new requests fetch fresh data
@@ -99,12 +105,16 @@ class RefreshInstagramToken extends Command
                 $this->info("  Token expires in: {$days} days");
             }
             
+            // Auto-save unless --no-save is specified
+            if (!$this->option('no-save')) {
+                $this->saveToken($instagram, $result['token']);
+            } else {
+                $this->newLine();
+                $this->warn('⚠ Add this token to your .env file:');
+                $this->line("INSTAGRAM_ACCESS_TOKEN={$result['token']}");
+            }
+            
             $this->newLine();
-            $this->warn('⚠ IMPORTANT: Add this token to your .env file:');
-            $this->newLine();
-            $this->line("INSTAGRAM_ACCESS_TOKEN={$result['token']}");
-            $this->newLine();
-            $this->info('Then run: php artisan config:clear');
             $this->warn('Remember to set up a scheduled task to refresh this token before it expires!');
             
             return Command::SUCCESS;
@@ -114,6 +124,58 @@ class RefreshInstagramToken extends Command
         $this->error("  Error: {$result['error']}");
         
         return Command::FAILURE;
+    }
+    
+    /**
+     * Save token to database (preferred) or .env file (fallback)
+     */
+    protected function saveToken(InstagramService $instagram, string $token): void
+    {
+        // Try database first
+        if ($instagram->saveAccessToken($token)) {
+            $this->newLine();
+            $this->info('✓ Token automatically saved to database!');
+            $this->info('  The new token will be used immediately.');
+            return;
+        }
+        
+        // Fall back to .env file
+        if ($this->updateEnvFile('INSTAGRAM_ACCESS_TOKEN', $token)) {
+            $this->newLine();
+            $this->info('✓ Token automatically saved to .env file!');
+            $this->info('  Run: php artisan config:clear');
+        } else {
+            $this->newLine();
+            $this->warn('⚠ Could not auto-save token. Please update manually:');
+            $this->line("INSTAGRAM_ACCESS_TOKEN={$token}");
+        }
+    }
+    
+    /**
+     * Update a value in the .env file
+     */
+    protected function updateEnvFile(string $key, string $value): bool
+    {
+        $envPath = base_path('.env');
+        
+        if (!file_exists($envPath)) {
+            return false;
+        }
+        
+        $envContent = file_get_contents($envPath);
+        
+        // Check if the key exists in the .env file
+        $pattern = "/^{$key}=.*/m";
+        
+        if (preg_match($pattern, $envContent)) {
+            // Replace existing value
+            $envContent = preg_replace($pattern, "{$key}={$value}", $envContent);
+        } else {
+            // Add new key-value pair
+            $envContent .= "\n{$key}={$value}";
+        }
+        
+        return file_put_contents($envPath, $envContent) !== false;
     }
 }
 

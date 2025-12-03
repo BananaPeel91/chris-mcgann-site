@@ -6,6 +6,8 @@ services:
     volumes:
       # Persist cache between container restarts
       - cache_data:/var/www/html/storage/framework/cache
+      # Persist SQLite database for settings
+      - db_data:/var/www/html/database
     environment:
       - APP_NAME=Chris McGann Painter & Decorator
       - APP_ENV=local
@@ -15,6 +17,7 @@ services:
       - LOG_CHANNEL=stderr
       - CACHE_DRIVER=file
       - SESSION_DRIVER=file
+      - DB_CONNECTION=sqlite
       # Instagram API credentials - set these in .env or pass directly
       - INSTAGRAM_APP_ID=${INSTAGRAM_APP_ID:-}
       - INSTAGRAM_APP_SECRET=${INSTAGRAM_APP_SECRET:-}
@@ -23,5 +26,6 @@ services:
 
 volumes:
   cache_data:
+  db_data:
 
 

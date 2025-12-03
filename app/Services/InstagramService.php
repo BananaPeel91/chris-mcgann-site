@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class InstagramService
 {
@@ -14,7 +16,52 @@ class InstagramService
     
     public function __construct()
     {
-        $this->accessToken = config('services.instagram.access_token', '');
+        // Try database first, fall back to .env
+        $this->accessToken = $this->getAccessToken();
+    }
+    
+    /**
+     * Get access token from database or .env fallback
+     */
+    protected function getAccessToken(): string
+    {
+        // Try to get from database first (if table exists)
+        try {
+            if (Schema::hasTable('settings')) {
+                $dbToken = Setting::get('instagram_access_token');
+                if (!empty($dbToken)) {
+                    return $dbToken;
+                }
+            }
+        } catch (\Exception $e) {
+            // Database not available, fall back to .env
+        }
+        
+        // Fall back to .env
+        return config('services.instagram.access_token', '');
+    }
+    
+    /**
+     * Save access token to database
+     */
+    public function saveAccessToken(string $token): bool
+    {
+        try {
+            if (Schema::hasTable('settings')) {
+                Setting::set('instagram_access_token', $token);
+                
+                // Update the current instance
+                $this->accessToken = $token;
+                
+                return true;
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to save Instagram token to database', [
+                'message' => $e->getMessage(),
+            ]);
+        }
+        
+        return false;
     }
     
     /**
