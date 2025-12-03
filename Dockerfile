@@ -1,10 +1,11 @@
 FROM php:8.2-apache
 
-# Install PHP extensions
+# Install PHP extensions (zip for composer, pgsql for Railway PostgreSQL)
 RUN apt-get update && apt-get install -y \
     libzip-dev \
+    libpq-dev \
     unzip \
-    && docker-php-ext-install zip \
+    && docker-php-ext-install zip pdo_pgsql \
     && a2enmod rewrite \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
