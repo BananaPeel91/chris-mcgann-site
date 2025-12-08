@@ -39,8 +39,8 @@ A beautiful one-page website for Chris McGann Painter & Decorator, built with La
    ```env
    INSTAGRAM_APP_ID=your_instagram_app_id
    INSTAGRAM_APP_SECRET=your_instagram_app_secret
-   INSTAGRAM_ACCESS_TOKEN=your_long_lived_access_token
    ```
+   Note: The access token is stored in the database, not in .env.
 
 5. **Run the development server:**
    ```bash
@@ -68,7 +68,7 @@ Once you have a short-lived access token, exchange it for a long-lived token:
 php artisan instagram:refresh-token --exchange --token=YOUR_SHORT_LIVED_TOKEN
 ```
 
-This will output the long-lived token. **Copy it to your `.env` file.**
+This will automatically save the long-lived token to the database.
 
 ### Token Refresh (Every 60 Days)
 
@@ -78,10 +78,7 @@ Long-lived tokens expire after 60 days. To refresh:
 php artisan instagram:refresh-token
 ```
 
-This outputs a new token - update your `.env` file with it, then run:
-```bash
-php artisan config:clear
-```
+The new token is automatically saved to the database.
 
 **Tip:** Set a calendar reminder to refresh the token every 50 days.
 

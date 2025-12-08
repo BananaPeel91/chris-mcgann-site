@@ -16,94 +16,26 @@ class InstagramService
     
     public function __construct()
     {
-        // Get token from database, or auto-initialize from Instagram
+        // Get token from database
         $this->accessToken = $this->getAccessToken();
     }
     
     /**
-     * Get access token from database, or auto-initialize from Instagram
-     * No .env fallback - token must be in database or fetched fresh
+     * Get access token from database only
      */
     protected function getAccessToken(): string
     {
-        // Try to get from database first (if table exists)
         try {
             if (Schema::hasTable('settings')) {
                 $dbToken = Setting::get('instagram_access_token');
                 if (!empty($dbToken)) {
                     return $dbToken;
                 }
-                
-                // No token in database - try to bootstrap from Instagram
-                // using the initial .env token (one-time migration)
-                return $this->bootstrapTokenFromInstagram();
             }
+            
+            Log::warning('No Instagram token found in database');
         } catch (\Exception $e) {
             Log::error('Database error getting Instagram token', [
-                'message' => $e->getMessage(),
-            ]);
-        }
-        
-        return '';
-    }
-    
-    /**
-     * Bootstrap token from Instagram using initial .env token
-     * This is a one-time operation to migrate token to database
-     */
-    protected function bootstrapTokenFromInstagram(): string
-    {
-        // Check if we've already tried bootstrapping recently (avoid repeated attempts)
-        $bootstrapAttempted = Cache::get('instagram_bootstrap_attempted');
-        if ($bootstrapAttempted) {
-            return '';
-        }
-        
-        // Get the seed token from .env
-        $seedToken = config('services.instagram.access_token', '');
-        if (empty($seedToken)) {
-            Log::warning('No Instagram token in database or .env');
-            return '';
-        }
-        
-        Log::info('Attempting to bootstrap Instagram token from .env to database');
-        
-        // Mark that we're attempting bootstrap (cache for 1 hour to avoid spam)
-        Cache::put('instagram_bootstrap_attempted', true, 3600);
-        
-        // Try to refresh the token from Instagram
-        try {
-            $response = Http::get("{$this->apiUrl}/refresh_access_token", [
-                'grant_type' => 'ig_refresh_token',
-                'access_token' => $seedToken,
-            ]);
-            
-            if ($response->successful()) {
-                $data = $response->json();
-                
-                if (isset($data['access_token'])) {
-                    $newToken = $data['access_token'];
-                    
-                    // Save to database
-                    Setting::set('instagram_access_token', $newToken);
-                    
-                    Log::info('Instagram token bootstrapped from .env to database', [
-                        'expires_in' => $data['expires_in'] ?? 'unknown',
-                    ]);
-                    
-                    // Clear the bootstrap attempt flag since it succeeded
-                    Cache::forget('instagram_bootstrap_attempted');
-                    
-                    return $newToken;
-                }
-            }
-            
-            Log::error('Failed to bootstrap Instagram token', [
-                'response' => $response->json(),
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Exception while bootstrapping Instagram token', [
                 'message' => $e->getMessage(),
             ]);
         }
