@@ -117,43 +117,6 @@ class InstagramService
     }
     
     /**
-     * Exchange short-lived token for long-lived token
-     */
-    public function exchangeForLongLivedToken(string $shortLivedToken): array
-    {
-        try {
-            $response = Http::get("{$this->apiUrl}/access_token", [
-                'grant_type' => 'ig_exchange_token',
-                'client_secret' => config('services.instagram.app_secret'),
-                'access_token' => $shortLivedToken,
-            ]);
-            
-            if ($response->successful()) {
-                $data = $response->json();
-                
-                if (isset($data['access_token'])) {
-                    return [
-                        'success' => true,
-                        'token' => $data['access_token'],
-                        'expires_in' => $data['expires_in'] ?? null,
-                    ];
-                }
-            }
-            
-            return [
-                'success' => false,
-                'error' => $response->json()['error']['message'] ?? 'Unknown error',
-            ];
-            
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage(),
-            ];
-        }
-    }
-    
-    /**
      * Get user media from Instagram
      * Cached for 12 hours to minimize API calls
      */

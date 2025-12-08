@@ -35,40 +35,16 @@ A beautiful one-page website for Chris McGann Painter & Decorator, built with La
    php artisan key:generate
    ```
 
-4. **Configure Instagram API credentials in `.env`:**
-   ```env
-   INSTAGRAM_APP_ID=your_instagram_app_id
-   INSTAGRAM_APP_SECRET=your_instagram_app_secret
-   ```
-   Note: The access token is stored in the database, not in .env.
-
-5. **Run the development server:**
+4. **Run the development server:**
    ```bash
    php artisan serve
    ```
 
-6. **Visit:** http://localhost:8000
+5. **Visit:** http://localhost:8000
 
 ## Instagram Setup
 
-### Getting Instagram API Credentials
-
-1. Go to [Facebook Developers](https://developers.facebook.com/)
-2. Create a new app with "Consumer" type
-3. Add the "Instagram Basic Display" product
-4. Configure OAuth redirect URIs
-5. Add your Instagram account as a test user
-6. Generate an access token
-
-### Getting Your Long-Lived Token
-
-Once you have a short-lived access token, exchange it for a long-lived token:
-
-```bash
-php artisan instagram:refresh-token --exchange --token=YOUR_SHORT_LIVED_TOKEN
-```
-
-This will automatically save the long-lived token to the database.
+The Instagram access token is stored in the database. Ensure a valid long-lived token exists in the `settings` table with key `instagram_access_token`.
 
 ### Token Refresh (Every 60 Days)
 
@@ -96,11 +72,8 @@ php artisan cache:clear
 ## Artisan Commands
 
 ```bash
-# Refresh existing long-lived token (outputs new token for .env)
+# Refresh Instagram token (automatically saves to database)
 php artisan instagram:refresh-token
-
-# Exchange short-lived token for long-lived token
-php artisan instagram:refresh-token --exchange --token=YOUR_SHORT_LIVED_TOKEN
 
 # Clear all cache
 php artisan cache:clear
