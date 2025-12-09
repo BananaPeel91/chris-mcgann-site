@@ -1,4 +1,4 @@
-FROM php:8.2-apache
+FROM php:8.4-apache
 
 # Install PHP extensions (zip for composer, pgsql for Railway PostgreSQL, fileinfo for file type detection)
 RUN apt-get update && apt-get install -y \
